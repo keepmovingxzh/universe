@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Universe ✨</title>
+    <!-- 引入 Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- 引入字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <!-- 引入图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* --- 1. 基础设置 --- */
+        :root {
+            --polaroid-bg: #fdfdfd;
+            --neon-color-1: rgba(255, 105, 180, 0.6); /* 荧光粉 */
+            --neon-color-2: rgba(147, 112, 219, 0.5); /* 荧光紫 */
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #090a0f;
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        #starfield {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+        }
+
+        /* --- 2. 标题文字区域 --- */
+        .title-container {
+            position: absolute; top: 10%; left: 50%;
+            transform: translateX(-50%);
+            text-align: center; z-index: 20;
+            pointer-events: none; width: 100%;
+        }
+
+        .main-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem; margin: 0;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #fbc2eb);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 154, 158, 0.6);
+            animation: breathe 5s ease-in-out infinite;
+        }
+
+        .sub-title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.2rem; color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px; letter-spacing: 5px;
+            animation: fadeUp 2s ease-out 1s forwards; opacity: 0;
+        }
+
+        /* --- 3. 初始界面：第一版复古拍立得 --- */
+        .swiper-container-wrapper {
+            position: absolute; top: 55%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 80%; z-index: 10;
+            display: flex; align-items: center;
+        }
+
+        .swiper {
+            width: 100%; padding-top: 50px; padding-bottom: 50px;
+        }
+
+        .swiper-slide {
+            background-color: var(--polaroid-bg);
+            width: 300px; 
+            height: auto; 
+            /* 还原第一版：底部留白较大 */
+            padding: 15px 15px 60px 15px; 
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform-origin: center bottom;
+            transition: transform 0.3s;
+            cursor: pointer;
+            border-radius: 2px; 
+        }
+
+        .photo-frame {
+            width: 100%; height: 320px; /* 还原第一版高度 */
+            overflow: hidden;
+            background: #eee; border: 1px solid #ddd;
+        }
+
+        .photo-frame img {
+            width: 100%; height: 100%;
+            object-fit: cover; filter: sepia(10%);
+            transition: transform 0.5s;
+        }
+
+        .swiper-slide:hover .photo-frame img { transform: scale(1.1); }
+
+        /* --- 4. 放大界面：荧光拍立得 --- */
+        .lightbox {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.94); z-index: 999;
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+
+        .lightbox.active { display: flex; opacity: 1; }
+
+        .panzoom-container {
+            width: 100%; height: 80%;
+            display: flex; justify-content: center; align-items: center;
+            overflow: visible; /* 允许光晕溢出 */
+        }
+
+        /* 放大后的荧光卡片 */
+        .polaroid-card-large {
+            background: white;
+            /* 保持和首页一致的留白比例 */
+            padding: 15px; padding-bottom: 60px; 
+            width: auto; max-width: 85vw; max-height: 75vh;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; border-radius: 4px;
+            
+            /* 核心：荧光呼吸特效 */
+            box-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 30px var(--neon-color-1), 0 0 60px var(--neon-color-2);
+            animation: neonPulse 4s infinite alternate; /* 呼吸慢一点 */
+            
+            transform-origin: center center;
+            will-change: transform; 
+        }
+
+        .large-img-container {
+            width: 100%; flex-grow: 1; overflow: hidden;
+            border: 1px solid #ddd; display: flex;
+            background: #f0f0f0;
+        }
+
+        #lightbox-img {
+            display: block; width: 100%; height: 100%;
+            object-fit: contain; max-height: 65vh; min-width: 200px;
+        }
+
+        .close-btn {
+            position: absolute; top: 30px; right: 30px;
+            color: white; font-size: 30px; width: 45px; height: 45px;
+            background: rgba(255,255,255,0.1); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1000;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tip-text {
+            color: rgba(255,255,255,0.4); margin-top: 20px; font-size: 0.8rem;
+            letter-spacing: 1px; position: absolute; bottom: 5%;
+        }
+
+        /* --- 5. 音乐控制 (降速) --- */
+        .music-control {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            width: 40px; height: 40px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px); cursor: pointer;
+        }
+        .music-control i { color: #fff; }
+        /* 这里的 8s 决定了旋转速度，数字越大越慢 */
+        .music-control.playing { animation: spin 8s linear infinite; box-shadow: 0 0 15px #ff9a9e; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes breathe { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 荧光动画 */
+        @keyframes neonPulse {
+            0% { box-shadow: 0 0 10px rgba(255,255,255,0.3), 0 0 20px var(--neon-color-1), 0 0 40px var(--neon-color-2); }
+            100% { box-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 40px var(--neon-color-1), 0 0 80px var(--neon-color-2); }
+        }
+
+        /* 手机适配 */
+        @media (max-width: 768px) {
+            .swiper-slide { width: 260px; padding: 10px 10px 50px 10px; }
+            .photo-frame { height: 280px; }
+            .main-title { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="starfield"></canvas>
+
+    <div class="title-container">
+        <h1 class="main-title">My Universe</h1>
+        <p class="sub-title">你就是我的全世界</p>
+    </div>
+
+    <audio id="bgm" src="nvhai.mp3" loop></audio>
+    <div class="music-control" onclick="toggleAudio()"><i class="fas fa-music"></i></div>
+
+    <div class="swiper-container-wrapper">
+        <div class="swiper mySwiper">
+            <div class="swiper-wrapper" id="gallery-wrapper"></div>
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <div class="close-btn" onclick="closeLightbox()"><i class="fas fa-times"></i></div>
+        <div class="panzoom-container">
+            <!-- 放大后的荧光卡片容器 -->
+            <div id="panzoom-element" class="polaroid-card-large">
+                <div class="large-img-container">
+                    <img id="lightbox-img" src="" alt="">
+                </div>
+            </div>
+        </div>
+        <p class="tip-text"></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+    <script>
+        // ================= 配置区 =================
+        const TOTAL_IMAGES = 19; 
+        // ==========================================
+
+        // --- 生成相册 ---
+        const galleryWrapper = document.getElementById('gallery-wrapper');
+        for (let i = 1; i <= TOTAL_IMAGES; i++) {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.setAttribute('onclick', `openLightbox('photo/${i}.jpg')`);
+
+            const imgBox = document.createElement('div');
+            imgBox.className = 'photo-frame';
+            const img = document.createElement('img');
+            img.src = `photo/${i}.jpg`; 
+            img.loading = "lazy";
+            imgBox.appendChild(img);
+            // 无文字
+            slide.appendChild(imgBox);
+            galleryWrapper.appendChild(slide);
+        }
+
+        // --- Swiper 初始化 (3D效果) ---
+        const swiper = new Swiper(".mySwiper", {
+            effect: "coverflow",
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: "auto",
+            coverflowEffect: {
+                rotate: 20,     // 初始版旋转角度
+                stretch: 0,
+                depth: 150,
+                modifier: 1,
+                slideShadows: true,
+            },
+            loop: true,
+            autoplay: { delay: 4000, disableOnInteraction: false }
+        });
+
+        // --- 放大荧光逻辑 ---
+        const lightbox = document.getElementById('lightbox');
+        const bigImg = document.getElementById('lightbox-img');
+        const panzoomElem = document.getElementById('panzoom-element');
+        let panzoomInstance = null;
+
+        function openLightbox(imgSrc) {
+            lightbox.classList.add('active');
+            bigImg.src = imgSrc;
+            swiper.autoplay.stop();
+
+            // 初始状态：稍微缩小并旋转，准备做动画
+            panzoomElem.style.transform = 'scale(0.8) rotate(0deg)';
+            panzoomElem.style.opacity = '0';
+            
+            setTimeout(() => {
+                // 入场动画：丝滑变大
+                panzoomElem.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease';
+                panzoomElem.style.transform = 'scale(1) rotate(0deg)';
+                panzoomElem.style.opacity = '1';
+
+                setTimeout(() => {
+                    // 动画结束后，初始化手势缩放
+                    panzoomElem.style.transition = 'none'; 
+                    if (panzoomInstance) panzoomInstance.dispose();
+                    panzoomInstance = Panzoom(panzoomElem, {
+                        maxScale: 4,
+                        minScale: 0.5,
+                        contain: 'outside',
+                        animate: true, // 开启惯性
+                        duration: 200, 
+                    });
+                    panzoomElem.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+                }, 600);
+            }, 50);
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            swiper.autoplay.start();
+            if (panzoomInstance) panzoomInstance.reset();
+        }
+
+        // --- 星空背景 (降速版) ---
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+        
+        function initStars() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            stars = [];
+            const count = width < 768 ? 60 : 100;
+            for(let i=0; i<count; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    // 速度慢下来：0.05 ~ 0.25
+                    speed: Math.random() * 0.2 + 0.05
+                });
+            }
+        }
+        
+        function animateStars() {
+            ctx.clearRect(0,0,width,height);
+            ctx.fillStyle = "white";
+            stars.forEach(star => {
+                star.y -= star.speed;
+                if(star.y < 0) star.y = height;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            for(let i=0; i<stars.length; i++) {
+                for(let j=i+1; j<stars.length; j++) {
+                    let dx = stars[i].x - stars[j].x;
+                    let dy = stars[i].y - stars[j].y;
+                    if(dx*dx + dy*dy < 5000) {
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateStars);
+        }
+        window.addEventListener('resize', initStars);
+        initStars();
+        animateStars();
+
+        // --- 音乐控制 ---
+        let isPlaying = false;
+        const audio = document.getElementById('bgm');
+        const btn = document.querySelector('.music-control');
+        function toggleAudio() {
+            if(isPlaying) { audio.pause(); btn.classList.remove('playing'); }
+            else { audio.play(); btn.classList.add('playing'); }
+            isPlaying = !isPlaying;
+        }
+        document.body.addEventListener('click', () => { if(!isPlaying) toggleAudio(); }, {once:true});
+    </script>
+</body>
+</html>
